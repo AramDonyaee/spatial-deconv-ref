@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spatial-deconv-ref"
+version = "0.1.0"
+description = "Recommend and export single-cell references for spatial deconvolution"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Aram Donyaee" }
+]
+dependencies = [
+    "anndata>=0.9.0",
+    "scanpy>=1.9.0",
+    "cellxgene-census>=1.13.0",
+    "scipy>=1.10.0",
+    "numpy>=1.23.0",
+    "pandas>=2.0.0",
+    "tqdm>=4.65.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spatial_deconv_ref"]
+
+[project.scripts]
+spatial-deconv-ref = "spatial_deconv_ref.cli:main"

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+*.egg-info
+
+# Virtual environments
+.venv_linux/
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Your exported reference outputs (generated, not source)
+exported_references/
+*.h5ad
+*.rds
+*.rda
+
+# Census cache, if cellxgene_census/tiledbsoma caches locally
+.census_cache/
