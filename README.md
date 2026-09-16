@@ -1,6 +1,3 @@
-File 2: README.md
-code
-Markdown
 # spatial-deconv-ref
 
 [![PyPI version](https://img.shields.io/badge/pypi-v0.1.0-blue.svg)](https://pypi.org/)
@@ -106,72 +103,30 @@ spatial-deconv-ref recommend \
     --export cell2location \
     --out ./c2l_ref.h5ad \
     --max-cells 3000
-CLI Parameters
-Flag	Shorthand	Description	Default
---spatial	-s	Path to spatial matrix file (.h5, .h5ad)	Required
---tissue	-t	Target tissue ontology term (e.g. 'colon', 'lymph node')	Required
---organism	-o	Organism: 'auto', 'homo_sapiens', 'mus_musculus'	'auto'
---top-n		Number of candidate references to score	3
---min-cells		Minimum cells required for candidate dataset	1000
---export	-e	Export target: 'cell2location' or 'rctd'	None
---out		Output destination path or folder	None
---max-cells		Max cells to download and export for reference	3000
-Scoring Formula
+
+## CLI Parameters
+
+| Flag | Shorthand | Description | Default |
+|------|-----------|-------------|---------|
+| `--spatial` | `-s` | Path to spatial matrix file (`.h5`, `.h5ad`) | Required |
+| `--tissue` | `-t` | Target tissue ontology term (e.g. `'colon'`, `'lymph node'`) | Required |
+| `--organism` | `-o` | Organism: `'auto'`, `'homo_sapiens'`, `'mus_musculus'` | `'auto'` |
+| `--top-n` |  | Number of candidate references to score | `3` |
+| `--min-cells` |  | Minimum cells required for candidate dataset | `1000` |
+| `--export` | `-e` | Export target: `'cell2location'` or `'rctd'` | `None` |
+| `--out` |  | Output destination path or folder | `None` |
+| `--max-cells` |  | Max cells to download and export for reference | `3000` |
+
+## Scoring Formula
+
 Candidates are scored using a composite index:
-Composite Score
-=
-0.40
-⋅
-max
-⁡
-(
-r
-s
-,
-0
-)
-+
-0.35
-⋅
-S
-overlap
-+
-0.25
-⋅
-S
-diversity
-Composite Score=0.40⋅max(r 
-s
-​
- ,0)+0.35⋅S 
-overlap
-​
- +0.25⋅S 
-diversity
-​
- 
-r
-s
-r 
-s
-​
- 
- (Concordance): Spearman rank correlation of normalized pseudobulk expression across shared features.
-S
-overlap
-S 
-overlap
-​
- 
- (Gene Overlap): Fraction of spatial panel genes captured in the reference.
-S
-diversity
-S 
-diversity
-​
- 
- (Cluster Diversity): Log-normalized count of distinct cell types with 
-≥
-15
-≥15
- cells.
+
+$$
+\text{Composite Score} = 0.40 \cdot \max(r_s, 0) + 0.35 \cdot S_{\text{overlap}} + 0.25 \cdot S_{\text{diversity}}
+$$
+
+Where:
+
+- $r_s$ (**Concordance**): Spearman rank correlation of normalized pseudobulk expression across shared features.
+- $S_{\text{overlap}}$ (**Gene Overlap**): Fraction of spatial panel genes captured in the reference.
+- $S_{\text{diversity}}$ (**Cluster Diversity**): Log-normalized count of distinct cell types with $\ge 15$ cells.
