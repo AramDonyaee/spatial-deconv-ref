@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import cellxgene_census
+import tiledbsoma
 import pandas as pd
 
 
@@ -13,12 +14,21 @@ def find_candidate_datasets(
 ) -> pd.DataFrame:
     """
     Search CELLxGENE Census for candidate single-cell datasets matching tissue.
-    Reads minimal columns to ensure fast response over S3.
+    Uses resilient S3 timeouts and queries only metadata columns.
     """
     tissue_clean = tissue.strip().lower()
     print(f"      Connecting to Census S3 storage and scanning '{tissue_clean}' metadata...")
 
-    with cellxgene_census.open_soma(census_version=census_version) as census:
+    # Configure connection timeouts to prevent S3 timeouts on residential connections
+    context = tiledbsoma.SOMATileDBContext(
+        tiledb_config={
+            "vfs.s3.connect_timeout_ms": "60000",
+            "vfs.s3.request_timeout_ms": "120000",
+            "vfs.s3.max_parallel_ops": "4",
+        }
+    )
+
+    with cellxgene_census.open_soma(census_version=census_version, context=context) as census:
         exp = census["census_data"][organism]
 
         # Primary search: broad tissue_general ontology
@@ -56,7 +66,7 @@ def find_candidate_datasets(
         if candidate_df.empty:
             return candidate_df
 
-        # Fetch readable study titles and collection info
+        # Fetch readable study titles and collection metadata
         datasets_info = census["census_info"]["datasets"].read().concat().to_pandas()
         candidate_df = candidate_df.merge(
             datasets_info[["dataset_id", "dataset_title", "collection_name"]],

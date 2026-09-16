@@ -7,29 +7,44 @@ import pandas as pd
 import scipy.sparse as sp
 from scipy.stats import spearmanr
 import cellxgene_census
+import tiledbsoma
 from anndata import AnnData
 from .profiler import SpatialProfile
+
+
+def get_resilient_soma_context() -> tiledbsoma.SOMATileDBContext:
+    """Create TileDB context optimized for high-latency or slow connections."""
+    return tiledbsoma.SOMATileDBContext(
+        tiledb_config={
+            "vfs.s3.connect_timeout_ms": "60000",
+            "vfs.s3.request_timeout_ms": "120000",
+            "vfs.s3.max_parallel_ops": "4",
+            "vfs.s3.connect_max_retries": "5",
+        }
+    )
 
 
 def fetch_candidate_anndata(
     dataset_id: str,
     organism: str = "homo_sapiens",
     genes_subset: list[str] | None = None,
-    max_cells: int = 1000,
+    max_cells: int | None = 2500,
     census_version: str = "stable"
 ) -> AnnData:
     """
-    Fetch candidate AnnData from Census using indexed soma_joinid coordinates.
-    Direct coordinate lookups avoid full database scans over S3.
+    Fetch candidate AnnData from Census with targeted gene and cell downsampling.
+    Uses indexed integer coordinates to avoid scanning the entire database.
     """
+    context = get_resilient_soma_context()
+
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
         warnings.filterwarnings("ignore", category=FutureWarning)
 
-        with cellxgene_census.open_soma(census_version=census_version) as census:
+        with cellxgene_census.open_soma(census_version=census_version, context=context) as census:
             exp = census["census_data"][organism]
 
-            # 1. Retrieve the integer soma_joinids for this specific candidate dataset
+            # 1. Retrieve the integer soma_joinids for this candidate dataset
             obs_indexer = exp.obs.read(
                 column_names=["soma_joinid"],
                 value_filter=f"dataset_id == '{dataset_id}'"
@@ -46,11 +61,9 @@ def fetch_candidate_anndata(
                 join_ids = np.random.choice(join_ids, size=max_cells, replace=False)
 
             join_ids.sort()
-            
-            # Pass a flat list of Python standard ints (matching PyBind11 Sequence[SupportsInt])
             obs_coords = [int(x) for x in join_ids]
 
-            # 3. Filter down to spatial panel genes if provided (first 500 genes)
+            # 3. Filter down to spatial panel genes if provided (slice to 500 genes)
             var_filter = None
             if genes_subset:
                 clean_genes = [g.replace("'", "") for g in genes_subset[:500] if isinstance(g, str)]
@@ -69,6 +82,10 @@ def fetch_candidate_anndata(
 
             adata.var_names = adata.var["feature_name"].astype(str)
             adata.var_names_make_unique()
+
+            # Prevent index name collision in AnnData HDF5 writer
+            adata.var.index.name = None
+            adata.obs.index.name = None
             return adata
 
 

@@ -17,14 +17,14 @@ def export_for_cell2location(
     Format reference for cell2location:
     - Retains unnormalized counts
     - Removes zero-count genes and cells
-    - Ensures cell_type column is categorical
-    - Clears index names to avoid HDF5 writing conflicts
+    - Casts cell_type to categorical
+    - Clears index names to prevent AnnData HDF5 writer collisions
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     ref = adata.copy()
 
-    # Clear index names to avoid AnnData IO conflict with 'feature_name' column
+    # Clear index names to prevent ValueError: DataFrame.index.name ('feature_name')
     ref.var.index.name = None
     ref.obs.index.name = None
 
@@ -74,7 +74,6 @@ def export_for_rctd(
     meta_df.to_csv(meta_file)
 
     ref_counts = adata.copy()
-    # Clear index names to avoid AnnData IO conflict
     ref_counts.var.index.name = None
     ref_counts.obs.index.name = None
     ref_counts.write_h5ad(counts_file)

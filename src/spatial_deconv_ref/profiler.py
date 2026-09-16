@@ -24,9 +24,9 @@ def detect_species(adata: AnnData, sample_size: int = 500) -> str:
     Auto-detect species (homo_sapiens vs. mus_musculus) using:
     1. Ensembl Gene ID prefix (adata.var['gene_ids'] or adata.var_names)
     2. Reference genome metadata (adata.var['genome'])
-    3. HGNC (ALL UPPERCASE) vs MGI (Title Case) gene symbol conventions.
+    3. HGNC (ALL UPPERCASE) vs MGI (Title Case) gene symbol naming conventions.
     """
-    # 1. Check Ensembl IDs if present
+    # 1. Ensembl ID check
     id_series = None
     if "gene_ids" in adata.var:
         id_series = adata.var["gene_ids"].dropna().astype(str)
@@ -41,7 +41,7 @@ def detect_species(adata: AnnData, sample_size: int = 500) -> str:
         if ensmusg_ratio > 0.5:
             return "mus_musculus"
 
-    # 2. Check Reference Genome Metadata
+    # 2. Reference Genome metadata check
     if "genome" in adata.var:
         genomes = adata.var["genome"].dropna().astype(str).str.lower().unique()
         for g in genomes:
@@ -50,7 +50,7 @@ def detect_species(adata: AnnData, sample_size: int = 500) -> str:
             if any(m in g for m in ["mm10", "mm39", "grcm"]):
                 return "mus_musculus"
 
-    # 3. Check HGNC vs MGI Capitalization Heuristics
+    # 3. Gene symbol casing heuristics (HGNC uppercase vs MGI titlecase)
     genes = [str(g) for g in adata.var_names[:sample_size] if isinstance(g, str) and len(str(g)) > 1]
     clean_genes = [g for g in genes if re.match(r"^[A-Za-z0-9\-]+$", g)]
 
@@ -70,7 +70,7 @@ def detect_species(adata: AnnData, sample_size: int = 500) -> str:
 
     raise ValueError(
         f"Unable to auto-detect species (uppercase ratio: {ratio_upper:.2f}, "
-        f"titlecase ratio: {ratio_title:.2f}). Please pass organism='homo_sapiens' "
+        f"titlecase ratio: {ratio_title:.2f}). Please specify organism='homo_sapiens' "
         f"or organism='mus_musculus' explicitly."
     )
 

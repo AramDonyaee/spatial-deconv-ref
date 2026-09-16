@@ -1,7 +1,6 @@
 """High-level recommendation pipeline orchestrator."""
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
@@ -31,13 +30,11 @@ class ReferenceSuggester:
         profile = extract_spatial_profile(spatial_adata, organism=self.organism)
         self.organism = profile.organism
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=r".*Specify 'census_version=.*")
-            candidates = find_candidate_datasets(
-                tissue=tissue, 
-                organism=self.organism, 
-                min_cells=min_cells
-            )
+        candidates = find_candidate_datasets(
+            tissue=tissue, 
+            organism=self.organism, 
+            min_cells=min_cells
+        )
 
         if candidates.empty:
             raise ValueError(
@@ -59,7 +56,6 @@ class ReferenceSuggester:
         scored_records = []
         print(f"\n      Streaming & scoring candidate submatrices...")
 
-        # Progress bar over candidates
         with tqdm(total=len(top_candidates), desc="      Scoring Progress", unit="dataset") as pbar:
             for _, row in top_candidates.iterrows():
                 d_id = row["dataset_id"]
@@ -82,7 +78,7 @@ class ReferenceSuggester:
                     scored_records.append(score_dict)
                 except Exception as exc:
                     print(f"\n      [Warning] Skipped candidate {d_id}: {exc}")
-                
+
                 pbar.update(1)
 
         if not scored_records:
@@ -98,9 +94,9 @@ class ReferenceSuggester:
         dataset_id: str,
         export_format: str,
         output_path: str | Path,
-        max_cells: int | None = 5000  # Default cap to keep export fast and lightweight
+        max_cells: int | None = 3000
     ) -> Path | dict[str, Path]:
-        """Fetch winning reference (capped for bandwidth speed) and export."""
+        """Fetch winning reference and export it formatted for deconvolution."""
         target_organism = "homo_sapiens" if self.organism == "auto" else self.organism
         cap_str = f"{max_cells:,} cells" if max_cells else "all cells"
         print(f"      Downloading reference data ({cap_str}) for export...")
