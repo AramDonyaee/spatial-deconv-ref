@@ -39,9 +39,13 @@ Because `cellxgene-census` relies on `tiledbsoma`, a **Linux**, **macOS**, or **
 git clone https://github.com/your-username/spatial-deconv-ref.git
 cd spatial-deconv-ref
 pip install -e .
-Usage: Python API
-code
-Python
+```
+
+---
+
+### Usage: Python API
+
+```python
 import scanpy as sc
 from spatial_deconv_ref import ReferenceSuggester
 
@@ -79,10 +83,15 @@ suggester.fetch_and_export(
     output_path="./rctd_reference/",
     max_cells=3000
 )
-Usage: Command-Line Interface (CLI)
+```
+
+---
+
+### Usage: Command-Line Interface (CLI)
+
 Ideal for command-line users, R researchers running RCTD, and workflow managers (Nextflow / Snakemake):
-code
-Bash
+
+```bash
 # Basic candidate ranking
 spatial-deconv-ref recommend \
     --spatial filtered_feature_bc_matrix.h5 \
@@ -103,6 +112,9 @@ spatial-deconv-ref recommend \
     --export cell2location \
     --out ./c2l_ref.h5ad \
     --max-cells 3000
+```
+
+---
 
 ## CLI Parameters
 
@@ -116,6 +128,8 @@ spatial-deconv-ref recommend \
 | `--export` | `-e` | Export target: `'cell2location'` or `'rctd'` | `None` |
 | `--out` |  | Output destination path or folder | `None` |
 | `--max-cells` |  | Max cells to download and export for reference | `3000` |
+
+---
 
 ## Scoring Formula
 
